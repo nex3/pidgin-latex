@@ -1,0 +1,35 @@
+This is a plugin for Pidgin [1] that allows you to display LaTeX [2] output into your IMs.
+
+Important : this plugin is not compatible with gaim-encryption plugin. If you have this plugin, please be sure not having the 2 working at the same time. (for any other imcompability, please contact qjuh@users.sourceforge.net )
+
+You need to have convert (from Image Magick [3]).
+
+To build and install :
+You can compile the plugin using
+$ make
+and install it with
+$ make install
+This will install it in ~/.purple/plugins so that only the user who install it can use it.
+
+To install it for everybody on your computer,
+$ make
+$ su
+# make install PREFIX="/path/to/pidgin" (this command as root user)
+generally /path/to/pidgin is /usr or /usr/local. If you don't know the path then you can find out using
+$ whereis pidgin
+and look for the part before "/lib/pidgin".
+
+To use
+- put LaTeX code into $$ ... $$ markup, for example $$x \in \mathbb{R}$$
+
+[1] http://www.pidgin.im/
+[2] http://www.latex-project.org/
+[3] http://www.imagemagick.org/
+
+Developer :		Benjamin Moll <qjuh@users.sourceforge.net> (contact me for all infomations or suggestions)
+Former Developer : 	Nicolas Schoonbroodt <nicolas@ffsa.be>
+Thanks for help or patch these other developer :
+		Eric Betts <bettse@onid.orst.edu>
+		GRIm@ <thegrima@altern.org>
+		Gof <ogoffart@kde. org>
+		Nicolai Stange (nic-stange@t-online.de)

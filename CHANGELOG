@@ -1,0 +1,32 @@
+*************
+Version 0.4
+*************
+        - windows port
+	- < 1024 bytes image bug corrected
+
+
+*************
+Version 0.3
+*************
+	- no more need of tex2im
+	- fix crash bug when no image were created
+	- fix gaim-encryption bug
+	- now use $$ markup (compatibility with KopeteTeX) 
+		old markup ([tex] ... [/tex]) will pobably be erased
+		later, so please use new system (if you have any
+		objection, speak from that with me
+
+
+*************
+version 0.2
+*************
+	- Work with gaim v1.0.3 
+	- The logs of the conversation now log the original message with the
+	  [tex]...[/tex] markup
+	- Now compile easier with a Makefile
+	
+***********
+Version 0.1
+***********
+	- Initial version
+	- site http://sourceforge.net/projects/gaim-latex/
