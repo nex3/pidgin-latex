@@ -39,6 +39,10 @@
 #define MAX(a,b) ( (a) > (b) ? (a ): (b))
 #endif
 
+#ifndef DWORD
+#define DWORD unsigned long
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -192,8 +196,10 @@ static DWORD execute(char *cmd, char *opts[], int copts)
   ZeroMemory( &sup, sizeof(sup) );
   sup.cb = sizeof(sup);
   ZeroMemory( &pi, sizeof(pi) );
+  sup.wShowWindow = SW_HIDE;
+  sup.dwFlags = STARTF_USESHOWWINDOW;
 
-  if(!CreateProcess(NULL, params, NULL, NULL, FALSE, DETACHED_PROCESS, NULL, NULL, &sup, &pi))
+  if(!CreateProcess(NULL, params, NULL, NULL, TRUE, 0, NULL, NULL, &sup, &pi))
   {
     win32_purple_notify_error(cmd);
     free(params);
@@ -209,11 +215,14 @@ static DWORD execute(char *cmd, char *opts[], int copts)
     return -1;
   }
 
-  if(!GetExitCodeThread(pi.hThread, &exitcode))
-  {
-    win32_purple_notify_error(cmd);
-    return -1;
-  }
+  do {
+    if(!GetExitCodeThread(pi.hThread, &exitcode))
+    {
+      win32_purple_notify_error(cmd);
+      return -1;
+    }
+    Sleep(10);
+  } while(exitcode==STILL_ACTIVE);
   CloseHandle(pi.hProcess);
   CloseHandle(pi.hThread);
   return exitcode;
@@ -450,8 +459,6 @@ static gboolean analyse(PurpleConversation *conv, char **tmp2, char *startdelim,
       name = "pidginTeX.jpg";
 
       idimg = purple_imgstore_add_with_id(filedata, MAX(1024,size), name);
-      //idimg = purple_imgstore_add_with_id(filedata, MAX(65536,size), NULL);
-      //g_free(filedata);
       filedata = NULL;
 
       if (idimg == 0)
@@ -669,7 +676,7 @@ static PurplePluginInfo info =
 
     LATEX_PLUGIN_ID,                                  /**< id             */
     "LaTeX",                                      /**< name           */
-    "2.0.0",                                        /**< version        */
+    "1.0",                                        /**< version        */
     /**  summary        */
     "To display LaTeX formula into Pidgin conversation.",
     /**  description    */

@@ -164,7 +164,7 @@ char* searchPATH(const char const *file);
 
 /*
  * execute executes the *cmd with opts appended WITHOUT ANY SPACES INBETWEEN to the commandline.
- * Advantage to system()-call under win32 ist tht no console window pops up.
+ * Advantage to system()-call under win32 ist that no console window pops up.
  * On systems other than windows this function is just a wrapper around the system()-call.
  * *cmd is the comannd to execute
  * *opts[] is an array of elements to be appended to the commandline
