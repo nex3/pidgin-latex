@@ -1,4 +1,18 @@
 *************
+Version 1.1
+*************
+	- fix STILL_ACTIVE bug on windows
+	- some minor bugs fixed
+
+*************
+Version 1.0
+*************
+	- changes for the new API of Pidgin applied
+	- added getfilename()
+	- changed tempfile-generation using purple-function
+	- some more blacklist-checking
+
+*************
 Version 0.4
 *************
         - windows port
