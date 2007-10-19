@@ -676,7 +676,7 @@ static PurplePluginInfo info =
 
     LATEX_PLUGIN_ID,                                  /**< id             */
     "LaTeX",                                      /**< name           */
-    "1.0",                                        /**< version        */
+    "1.1",                                        /**< version        */
     /**  summary        */
     "To display LaTeX formula into Pidgin conversation.",
     /**  description    */
