@@ -63,6 +63,8 @@
 #define FOOTER_MATH "\\end{gather*}"
 
 #define FILTER_AND "&amp;"
+#define FILTER_LT "&lt;"
+#define FILTER_GT "&gt;"
 #define FILTER_BR "<br>"
 
 /* Yes, this is simply a copy/paste of KopeteTex blacklist. */

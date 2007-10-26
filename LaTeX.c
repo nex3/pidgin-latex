@@ -415,10 +415,22 @@ static gboolean analyse(PurpleConversation *conv, char **tmp2, char *startdelim,
       strncpy(tex, &ptr1[strlen(startdelim)], pos2 - pos1 - strlen(startdelim)-strlen(enddelim));
       tex[pos2-pos1-strlen(startdelim)-strlen(enddelim)] = '\0';
 
-      // Pidgin transform & to &amp; and I make the inverse transformation
+      // Pidgin transforms & to &amp; and I make the inverse transformation
       while ( (filter = strstr(tex, FILTER_AND) ) != NULL)
 	{
 	  strcpy(&tex[strlen(tex) - strlen(filter) + 1], &filter[5]);
+	}
+      // Pidgin transforms < to &lt
+      while ( (filter = strstr(tex, FILTER_LT) ) != NULL)
+	{
+	  strcpy(&tex[strlen(tex) - strlen(filter)], "<");
+	  strcpy(&tex[strlen(tex) - strlen(filter)] + 1, &filter[4]);
+	}
+      // Pidgin transforms > to &gt
+      while ( (filter = strstr(tex, FILTER_GT) ) != NULL)
+	{
+	  strcpy(&tex[strlen(tex) - strlen(filter)], ">");
+	  strcpy(&tex[strlen(tex) - strlen(filter)] + 1, &filter[4]);
 	}
       // <br> filter
       while ( (filter = strstr(tex, FILTER_BR) ) != NULL)
