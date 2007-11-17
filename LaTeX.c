@@ -39,10 +39,6 @@
 #define MAX(a,b) ( (a) > (b) ? (a ): (b))
 #endif
 
-#ifndef DWORD
-#define DWORD unsigned long
-#endif
-
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -171,12 +167,12 @@ char* searchPATH(const char const *file)
 }
 
 #ifdef _WIN32 /* we could take system(), too, but this opens ugly console-windows within IM-Session*/
-static DWORD execute(char *cmd, char *opts[], int copts)
+static LPDWORD execute(char *cmd, char *opts[], int copts)
 {
   int i=0;
   int len=strlen(cmd) + 4;
   char *params=NULL;
-  DWORD exitcode=0;
+  LPDWORD exitcode=0;
   for(i=0; i<copts; ++i)
     len+=(strlen(opts[i]))*sizeof(char);
 

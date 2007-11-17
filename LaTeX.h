@@ -175,7 +175,7 @@ char* searchPATH(const char const *file);
  * returns -1 if execution failed, otherwise the return code of the executed program.
 */
 #ifdef _WIN32
-static DWORD execute(char *cmd, char *opts[], int copts);
+static LPDWORD execute(char *cmd, char *opts[], int copts);
 #else
 static int execute(char *cmd, char *opts[], int copts);
 #endif
