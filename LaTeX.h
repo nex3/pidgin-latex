@@ -31,6 +31,14 @@
  */
 #ifndef _PIDGIN_LATEX_H_
 #define _PIDGIN_LATEX_H_
+#ifndef G_GNUC_NULL_TERMINATED
+#  if __GNUC__ >= 4
+#    define G_GNUC_NULL_TERMINATED __attribute__((__sentinel__))
+#  else
+#    define G_GNUC_NULL_TERMINATED
+#  endif /* __GNUC__ >= 4 */
+#endif /* G_GNUC_NULL_TERMINATED */
+
 #define PURPLE_PLUGINS
 
 //include
