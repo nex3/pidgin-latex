@@ -518,36 +518,6 @@ static gboolean analyse(PurpleConversation *conv, char **tmp2, char *startdelim,
   return TRUE;
 }
 
-static gboolean pidgin_latex_write(PurpleConversation *conv, char *nom, char *message, PurpleMessageFlags messFlag, char *original)
-{
-  gboolean logflag;
-
-  // writing log
-  logflag = purple_conversation_is_logging(conv);
-
-  if (logflag)
-    {
-      GList *log;
-
-      if (conv->logs == NULL)
-        open_log(conv);
-
-      log = conv->logs;
-      while (log != NULL) {
-        purple_log_write((PurpleLog *)log->data, messFlag, nom, time(NULL), original);
-        log = log->next;
-      }
-      purple_conversation_set_logging(conv,FALSE);
-    }
-  
-  purple_conv_im_write(PURPLE_CONV_IM(conv), nom, message, messFlag, time(NULL));
- 
-  if (logflag)
-    purple_conversation_set_logging(conv,TRUE);
-
-  return FALSE;
-}
-
 static gboolean message_send(PurpleAccount *account, const char *who, char **buffer, PurpleConversation *conv, PurpleMessageFlags flags)
 {
   char *tmp2;
@@ -590,12 +560,12 @@ static gboolean message_send(PurpleAccount *account, const char *who, char **buf
 	  return FALSE;
 	}
 
-      pidgin_latex_write(conv, name2, tmp2, PURPLE_MESSAGE_SEND, *buffer);
-
-      free(tmp2);
       free(name2);
+      free(*buffer);
+      *buffer = tmp2;
+      tmp2 = NULL;
 
-      return TRUE;
+      return FALSE;
     }
 
   free(tmp2);
@@ -607,7 +577,7 @@ static gboolean message_recv(PurpleAccount *account, char **sender, char **buffe
 {
 
   // if no $$ -> nothing to do
-  if (strstr(*buffer, BEG) == NULL && strstr(*buffer, KOPETE_TEX) == NULL)
+  if (/*strstr(*buffer, BEG) == NULL && */ strstr(*buffer, KOPETE_TEX) == NULL)
     {
       return FALSE;
     };
@@ -630,12 +600,11 @@ static gboolean message_recv(PurpleAccount *account, char **sender, char **buffe
 
       if (analyse(conv, &tmp2, KOPETE_TEX, KOPETE_TEX, TRUE));
       {
-      	pidgin_latex_write(conv, *sender, tmp2, PURPLE_MESSAGE_RECV, *buffer);
-
-	free(tmp2); tmp2 = NULL;
 	free(*buffer);
-	*buffer = NULL;
-	return TRUE;
+	*buffer = tmp2;
+	tmp2 = NULL;
+
+	return FALSE;
       }
 
       free(tmp2);
@@ -653,8 +622,14 @@ static gboolean plugin_load(PurplePlugin *plugin)
   purple_signal_connect(conv_handle, "writing-im-msg",
 		      plugin, PURPLE_CALLBACK(message_send), NULL);
 
+  purple_signal_connect(conv_handle, "writing-chat-msg",
+		      plugin, PURPLE_CALLBACK(message_send), NULL);
+
   purple_signal_connect_priority(conv_handle, "receiving-im-msg",
-		      plugin, PURPLE_CALLBACK(message_recv), NULL, -9999);
+		      plugin, PURPLE_CALLBACK(message_recv), NULL, PURPLE_PRIORITY_LOWEST);
+
+  purple_signal_connect_priority(conv_handle, "receiving-chat-msg",
+		      plugin, PURPLE_CALLBACK(message_recv), NULL, PURPLE_PRIORITY_LOWEST);
   purple_debug(PURPLE_DEBUG_INFO, "LaTeX", "LaTeX loaded\n");
 
   return TRUE;
