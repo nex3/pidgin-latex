@@ -349,7 +349,7 @@ static gboolean latex_to_image(char *latex, char **file_tex, char **file_dvi, ch
   tmpdir=getdirname(*file_tex);
   /* generate commands, also new */
   char *latexopts[5]={"--interaction=nonstopmode", " ", "\"", *file_tex, "\""};
-  char *dvipsopts[8]={"-E", " ", "-o", " \"", *file_ps, "\" \"", *file_dvi, "\""};
+  char *dvipsopts[10]={"-E", " ", "-x 1300", " ", "-o", " \"", *file_ps, "\" \"", *file_dvi, "\""};
   char *convertopts[5]={"\"", *file_ps, "\" \"", *file_png, "\""};
   cmdlatex=get_latex_cmd();
   cmddvips=get_dvips_cmd();
@@ -368,7 +368,7 @@ static gboolean latex_to_image(char *latex, char **file_tex, char **file_dvi, ch
   }
 
   free(tmpdir);
-  if((execute(cmdlatex, latexopts, 5) || execute(cmddvips, dvipsopts, 8) ||  execute(cmdconvert, convertopts, 5))) return FALSE;
+  if((execute(cmdlatex, latexopts, 5) || execute(cmddvips, dvipsopts, 10) ||  execute(cmdconvert, convertopts, 5))) return FALSE;
 
   free(cmdlatex);
   free(cmddvips);
