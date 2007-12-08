@@ -338,6 +338,7 @@ static gboolean latex_to_image(char *latex, char **file_tex, char **file_dvi, ch
   strcat(*file_ps, ".ps");
   strcpy(*file_png, file_tmp);
   strcat(*file_png, ".jpg");
+  unlink(file_tmp);
   free(file_tmp);
   fclose(texfile);
 
