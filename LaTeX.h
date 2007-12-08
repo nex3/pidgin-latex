@@ -105,7 +105,18 @@ static gboolean latex_to_image(char *latex, char **file_tex, char **file_dvi, ch
  *  and tmp2 becomes 'some<img="number">thing'
  * returns TRUE on success, FALSE otherwise
  */
-static gboolean analyse(PurpleConversation *conv, char **tmp2, char *startdelim, char *enddelim, gboolean remote);
+static gboolean analyse(char **tmp2, char *startdelim, char *enddelim, gboolean remote);
+
+/*
+ * pidgin_latex_write perform the effective write of the latex code in the IM windows
+ * 	*conv is a pointer onto the conversation context
+ *	*nom is the name of the correspondent
+ *	*message is the modified message with the image
+ *	*messFlags is Flags related to the messages
+ *	*original is the original message unmodified
+ * return TRUE.
+ */
+static gboolean pidgin_latex_write(PurpleConversation *conv, char *nom, char *message, PurpleMessageFlags messFlag, char *original);
 
 /* to intercept outgoing messages */
 static gboolean message_send(PurpleAccount *account, const char *who, char **buffer, PurpleConversation *conv, PurpleMessageFlags flags);
@@ -113,8 +124,6 @@ static gboolean message_send(PurpleAccount *account, const char *who, char **buf
 /* to intercept incoming messages */
 static gboolean message_recv(PurpleAccount *account, char **sender, char **buffer, PurpleConversation *conv, PurpleMessageFlags *flags);
 
-
-#define TMPPRE "gltx" /* temorary files will be prefixed by TMPPRE */
 /*
  * getdirname returns the directory's part of a filename.
  * Parsing is done OS-dependently (with path-separator as defined in glib/gutils.h)

@@ -377,7 +377,7 @@ static gboolean latex_to_image(char *latex, char **file_tex, char **file_dvi, ch
   return TRUE;
 }
 
-static gboolean analyse(PurpleConversation *conv, char **tmp2, char *startdelim, char *enddelim, gboolean remote)
+static gboolean analyse(char **tmp2, char *startdelim, char *enddelim, gboolean remote)
 {
   int pos1, pos2, idimg;
   char *ptr1, *ptr2;
@@ -519,6 +519,39 @@ static gboolean analyse(PurpleConversation *conv, char **tmp2, char *startdelim,
   return TRUE;
 }
 
+static gboolean pidgin_latex_write(PurpleConversation *conv, char *nom, char *message, PurpleMessageFlags messFlag, char *original)
+{
+  gboolean logflag;
+
+  // writing log
+  logflag = purple_conversation_is_logging(conv);
+
+  if (logflag)
+    {
+      GList *log;
+
+      if (conv->logs == NULL)
+        open_log(conv);
+
+      log = conv->logs;
+      while (log != NULL) {
+        purple_log_write((PurpleLog *)log->data, messFlag, nom, time(NULL), original);
+        log = log->next;
+      }
+      purple_conversation_set_logging(conv,FALSE);
+    }
+  
+  if(conv->type == PURPLE_CONV_TYPE_CHAT)
+    purple_conv_chat_write(PURPLE_CONV_CHAT(conv), nom, message, messFlag, time(NULL));
+  else
+    purple_conv_im_write(PURPLE_CONV_IM(conv), nom, message, messFlag, time(NULL));
+ 
+  if (logflag)
+    purple_conversation_set_logging(conv,TRUE);
+
+  return FALSE;
+}
+
 static gboolean message_send(PurpleAccount *account, const char *who, char **buffer, PurpleConversation *conv, PurpleMessageFlags flags)
 {
   char *tmp2;
@@ -540,7 +573,7 @@ static gboolean message_send(PurpleAccount *account, const char *who, char **buf
 
   strcpy(tmp2,*buffer);
 
-  if (analyse(conv, &tmp2, KOPETE_TEX, KOPETE_TEX, FALSE) )
+  if (analyse(&tmp2, KOPETE_TEX, KOPETE_TEX, FALSE) )
     {
       char *name2;
 
@@ -561,12 +594,12 @@ static gboolean message_send(PurpleAccount *account, const char *who, char **buf
 	  return FALSE;
 	}
 
-      free(name2);
-      free(*buffer);
-      *buffer = tmp2;
-      tmp2 = NULL;
+      pidgin_latex_write(conv, name2, tmp2, PURPLE_MESSAGE_SEND, *buffer);
 
-      return FALSE;
+      free(tmp2);
+      free(name2);
+
+      return TRUE;
     }
 
   free(tmp2);
@@ -599,13 +632,14 @@ static gboolean message_recv(PurpleAccount *account, char **sender, char **buffe
 
       strcpy(tmp2,*buffer);
 
-      if (analyse(conv, &tmp2, KOPETE_TEX, KOPETE_TEX, TRUE));
+      if (analyse(&tmp2, KOPETE_TEX, KOPETE_TEX, TRUE));
       {
-	free(*buffer);
-	*buffer = tmp2;
-	tmp2 = NULL;
+	pidgin_latex_write(conv, *sender, tmp2, PURPLE_MESSAGE_RECV, *buffer);
 
-	return FALSE;
+	free(tmp2); tmp2 = NULL;
+	free(*buffer);
+	*buffer = NULL;
+	return TRUE;
       }
 
       free(tmp2);

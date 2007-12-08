@@ -1,4 +1,10 @@
 *************
+Version 1.2
+*************
+	- added support for LaTeX in Chats like IRC
+	- minor bugs fixed
+
+*************
 Version 1.1
 *************
 	- fix STILL_ACTIVE bug on windows
