@@ -641,7 +641,9 @@ static gboolean plugin_unload(PurplePlugin * plugin)
   void *conv_handle = purple_conversations_get_handle();
 
   purple_signal_disconnect(conv_handle, "writing-im-msg", plugin, PURPLE_CALLBACK(message_send));
+  purple_signal_disconnect(conv_handle, "writing-chat-mg", plugin, PURPLE_CALLBACK(message_send));
   purple_signal_disconnect(conv_handle, "receiving-im-msg", plugin, PURPLE_CALLBACK(message_recv));
+  purple_signal_disconnect(conv_handle, "receiving-chat-msg", plugin, PURPLE_CALLBACK(message_recv));
 
   return TRUE;
 }
