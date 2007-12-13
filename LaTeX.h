@@ -116,13 +116,10 @@ static gboolean analyse(char **tmp2, char *startdelim, char *enddelim, gboolean 
  *	*original is the original message unmodified
  * return TRUE.
  */
-static gboolean pidgin_latex_write(PurpleConversation *conv, char *nom, char *message, PurpleMessageFlags messFlag, char *original);
+static gboolean pidgin_latex_write(PurpleConversation *conv, const char *nom, char *message, PurpleMessageFlags messFlag, char *original);
 
-/* to intercept outgoing messages */
+/* to intercept in- and outgoing messages */
 static gboolean message_send(PurpleAccount *account, const char *who, char **buffer, PurpleConversation *conv, PurpleMessageFlags flags);
-
-/* to intercept incoming messages */
-static gboolean message_recv(PurpleAccount *account, char **sender, char **buffer, PurpleConversation *conv, PurpleMessageFlags *flags);
 
 /*
  * getdirname returns the directory's part of a filename.

@@ -519,7 +519,7 @@ static gboolean analyse(char **tmp2, char *startdelim, char *enddelim, gboolean 
   return TRUE;
 }
 
-static gboolean pidgin_latex_write(PurpleConversation *conv, char *nom, char *message, PurpleMessageFlags messFlag, char *original)
+static gboolean pidgin_latex_write(PurpleConversation *conv, const char *nom, char *message, PurpleMessageFlags messFlag, char *original)
 {
   gboolean logflag;
 
@@ -541,9 +541,9 @@ static gboolean pidgin_latex_write(PurpleConversation *conv, char *nom, char *me
       purple_conversation_set_logging(conv,FALSE);
     }
   
-  if(conv->type == PURPLE_CONV_TYPE_CHAT)
+  if(purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_CHAT)
     purple_conv_chat_write(PURPLE_CONV_CHAT(conv), nom, message, messFlag, time(NULL));
-  else
+  else if(purple_conversation_get_type(conv) == PURPLE_CONV_TYPE_IM)
     purple_conv_im_write(PURPLE_CONV_IM(conv), nom, message, messFlag, time(NULL));
  
   if (logflag)
@@ -555,10 +555,10 @@ static gboolean pidgin_latex_write(PurpleConversation *conv, char *nom, char *me
 static gboolean message_send(PurpleAccount *account, const char *who, char **buffer, PurpleConversation *conv, PurpleMessageFlags flags)
 {
   char *tmp2;
-  int t[10], i = 0;//, j;
+  int t[10], i = 0;
 
   // if nothing to do
-  if (/*strstr(*buffer, BEG) == NULL &&*/ strstr(*buffer,KOPETE_TEX) == NULL)
+  if (strstr(*buffer,KOPETE_TEX) == NULL)
     {
       return FALSE;
     };
@@ -575,30 +575,9 @@ static gboolean message_send(PurpleAccount *account, const char *who, char **buf
 
   if (analyse(&tmp2, KOPETE_TEX, KOPETE_TEX, FALSE) )
     {
-      char *name2;
-
-      // TODO : THIS IS VERY VERY UGLY
-      // TODO : MODIFY TO MINIMIZE CALL
-      // finding name of sender
-      if (purple_account_get_alias(account) != NULL)
-	{
-	  name2 = malloc(strlen(purple_account_get_alias(account))+1);
-	  strcpy(name2, purple_account_get_alias(account));
-	}
-      else	if (purple_account_get_username(account) != NULL)
-	{
-	  name2 = malloc(strlen(purple_account_get_username(account))+1);
-	  strcpy(name2,purple_account_get_username(account));
-	} else {
-	  free(tmp2);
-	  return FALSE;
-	}
-
-      pidgin_latex_write(conv, name2, tmp2, PURPLE_MESSAGE_SEND, *buffer);
+      pidgin_latex_write(conv, who, tmp2, flags, *buffer);
 
       free(tmp2);
-      free(name2);
-
       return TRUE;
     }
 
@@ -606,49 +585,6 @@ static gboolean message_send(PurpleAccount *account, const char *who, char **buf
 
   return FALSE;
 }
-
-static gboolean message_recv(PurpleAccount *account, char **sender, char **buffer, PurpleConversation *conv, PurpleMessageFlags *flags)
-{
-
-  // if no $$ -> nothing to do
-  if (/*strstr(*buffer, BEG) == NULL && */ strstr(*buffer, KOPETE_TEX) == NULL)
-    {
-      return FALSE;
-    };
-
-  if (is_blacklisted(*buffer)) return FALSE;
-
-  if (conv==NULL) conv = purple_conversation_new(PURPLE_CONV_TYPE_IM,account,*sender);
-  if (purple_conversation_get_im_data(conv) != NULL)
-    {
-      char *tmp2;
-      int t[10], i = 0;//, j;
-
-      if ((tmp2 = malloc(strlen(*buffer)+1)) == NULL)
-	{
-	  // TODO: Report the error
-	  return FALSE;
-	}
-
-      strcpy(tmp2,*buffer);
-
-      if (analyse(&tmp2, KOPETE_TEX, KOPETE_TEX, TRUE));
-      {
-	pidgin_latex_write(conv, *sender, tmp2, PURPLE_MESSAGE_RECV, *buffer);
-
-	free(tmp2); tmp2 = NULL;
-	free(*buffer);
-	*buffer = NULL;
-	return TRUE;
-      }
-
-      free(tmp2);
-      return FALSE;
-    }
-
-  return FALSE;
-}
-
 
 static gboolean plugin_load(PurplePlugin *plugin)
 {
@@ -660,11 +596,6 @@ static gboolean plugin_load(PurplePlugin *plugin)
   purple_signal_connect(conv_handle, "writing-chat-msg",
 		      plugin, PURPLE_CALLBACK(message_send), NULL);
 
-  purple_signal_connect_priority(conv_handle, "receiving-im-msg",
-		      plugin, PURPLE_CALLBACK(message_recv), NULL, PURPLE_PRIORITY_LOWEST);
-
-  purple_signal_connect_priority(conv_handle, "receiving-chat-msg",
-		      plugin, PURPLE_CALLBACK(message_recv), NULL, PURPLE_PRIORITY_LOWEST);
   purple_debug(PURPLE_DEBUG_INFO, "LaTeX", "LaTeX loaded\n");
 
   return TRUE;
@@ -676,8 +607,6 @@ static gboolean plugin_unload(PurplePlugin * plugin)
 
   purple_signal_disconnect(conv_handle, "writing-im-msg", plugin, PURPLE_CALLBACK(message_send));
   purple_signal_disconnect(conv_handle, "writing-chat-mg", plugin, PURPLE_CALLBACK(message_send));
-  purple_signal_disconnect(conv_handle, "receiving-im-msg", plugin, PURPLE_CALLBACK(message_recv));
-  purple_signal_disconnect(conv_handle, "receiving-chat-msg", plugin, PURPLE_CALLBACK(message_recv));
 
   return TRUE;
 }
@@ -696,7 +625,7 @@ static PurplePluginInfo info =
 
     LATEX_PLUGIN_ID,                                  /**< id             */
     "LaTeX",                                      /**< name           */
-    "1.1",                                        /**< version        */
+    "1.2",                                        /**< version        */
     /**  summary        */
     "To display LaTeX formula into Pidgin conversation.",
     /**  description    */
