@@ -34,6 +34,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #ifndef MAX
 #define MAX(a,b) ( (a) > (b) ? (a ): (b))
@@ -184,8 +187,10 @@ static LPDWORD execute(char *cmd, char *opts[], int copts)
   strcat(params, cmd);
   strcat(params, "\" ");
 
-  for(i=0; i<copts; ++i)
+  for(i=0; i<copts; ++i) {
     strcat(params, opts[i]);
+    strcat(params, " ");
+  }
 
   STARTUPINFO sup;
   PROCESS_INFORMATION pi;
@@ -223,30 +228,29 @@ static LPDWORD execute(char *cmd, char *opts[], int copts)
   CloseHandle(pi.hThread);
   return exitcode;
 }
-#else /* not windows, take system() */
+#else /* not windows, take exec(), because system() did ugly things with respect to the exitcode sometimes */
 static int execute(char *cmd, char *opts[], int copts)
 {
   int i=0;
-  int exitcode=-1;
-  int len=strlen(cmd) + 4;
-  char *params=NULL;
+  int exitcode=-1, exitstatus;
+  pid_t child_id=0;
+  char **opt=NULL;
+  opt=malloc((copts+2)*sizeof(char*));
 
-  for(i=0; i<copts; ++i)
-    len+=(strlen(opts[i]))*sizeof(char);
-
-  params=malloc(len);
-  if(!params)
-    return -1;
-
-  strcpy(params, "\"");
-  strcat(params, cmd);
-  strcat(params, "\" ");
-
-  for(i=0; i<copts; ++i)
-    strcat(params, opts[i]);
-
-  exitcode=system(params);
-  free(params);
+  opt[0]=cmd;
+  for(i=0; i<copts;i++)
+    opt[i+1]=*(opts+i);
+  opt[copts+1]=NULL;
+  
+  child_id=fork();
+  if(child_id==0) {
+    exitcode=execvp(cmd,opt);
+    exit(exitcode);
+  }
+  wait(&exitstatus);
+  free(opt);
+  if(WIFEXITED(exitstatus))
+    exitcode=WEXITSTATUS(exitstatus);
   return exitcode;
 }
 #endif
@@ -318,9 +322,9 @@ static gboolean latex_to_image(char *latex, char **file_tex, char **file_dvi, ch
   *file_dvi=malloc((strlen(file_tmp)+5)*sizeof(char));
   *file_ps=malloc((strlen(file_tmp)+4)*sizeof(char));
   *file_png=malloc((strlen(file_tmp)+5)*sizeof(char));
+  fclose(texfile);
   if(!(file_tmp && *file_tex && *file_dvi && *file_ps && *file_png))
   {
-    fclose(texfile);
     unlink(file_tmp);
     free(file_tmp);
     free(*file_tex);
@@ -337,20 +341,22 @@ static gboolean latex_to_image(char *latex, char **file_tex, char **file_dvi, ch
   strcpy(*file_ps, file_tmp);
   strcat(*file_ps, ".ps");
   strcpy(*file_png, file_tmp);
-  strcat(*file_png, ".jpg");
+  strcat(*file_png, ".png");
   unlink(file_tmp);
   free(file_tmp);
-  fclose(texfile);
 
   if (! (texfile = fopen(*file_tex, "w"))) return FALSE;
   fprintf(texfile, HEADER HEADER_MATH "%s" FOOTER_MATH FOOTER, latex);
   fclose (texfile);
 
   tmpdir=getdirname(*file_tex);
-  /* generate commands, also new */
+  /* generate commands, also new * /
   char *latexopts[5]={"--interaction=nonstopmode", " ", "\"", *file_tex, "\""};
   char *dvipsopts[10]={"-E", " ", "-x 1300", " ", "-o", " \"", *file_ps, "\" \"", *file_dvi, "\""};
-  char *convertopts[5]={"\"", *file_ps, "\" \"", *file_png, "\""};
+  char *convertopts[5]={"\"", *file_ps, "\" \"", *file_png, "\""};*/
+  char *latexopts[2]={"--interaction=nonstopmode", *file_tex};
+  char *dvipsopts[5]={"-E", "-x 1300", "-o", *file_ps, *file_dvi};
+  char *convertopts[3]={*file_ps, "-antialias", *file_png};
   cmdlatex=get_latex_cmd();
   cmddvips=get_dvips_cmd();
   cmdconvert=get_convert_cmd();
@@ -368,7 +374,7 @@ static gboolean latex_to_image(char *latex, char **file_tex, char **file_dvi, ch
   }
 
   free(tmpdir);
-  if((execute(cmdlatex, latexopts, 5) || execute(cmddvips, dvipsopts, 10) ||  execute(cmdconvert, convertopts, 5))) return FALSE;
+  if((execute(cmdlatex, latexopts, 2) || execute(cmddvips, dvipsopts, 5) ||  execute(cmdconvert, convertopts, 3))) return FALSE;
 
   free(cmdlatex);
   free(cmddvips);
